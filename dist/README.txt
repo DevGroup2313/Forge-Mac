@@ -3,6 +3,8 @@ THE FORGE · BUILD 9s62 (pass 630, 17 October 2026) · THE PACKAGES
 Every package was made by the Forge itself, from its own Download-the-app step (the Forge opened as the
 app on its own stage, in headless Chromium). The app file inside each one is byte for byte the
 the_forge.html at the top of this repository. Each zip opens with READ ME FIRST.txt.
+These packages were made after the review (see RELEASE_9s62.md, "The review, and what it changed"): the app
+file inside them is the reviewed and retested build, checked against the repository file by checksum.
 
   the_forge_mac_9s62.zip        MacBook Pro: the Mac project with its GitHub recipe, and "Build Mac App.command"
   the_forge_mac_mini_9s62.zip   Mac mini (Apple silicon): the same universal app, with a guide written for the Mac mini

@@ -27,7 +27,7 @@ Tests that need an app file skip, and say so, when the file is absent.
 | `library.test.js` | the in-app store self-test passes on this browser; copies read back at their recorded size |
 | `storage_backup.test.js` | the Storage card measures, a limit warns, Clean the library frees the earlier copies, the zip backup exports and reads back whole into a fresh profile |
 | `compare.test.js` | two kept versions compare in words and by line; the same file twice says so |
-| `a11y.test.js` | axe-core finds no serious or critical violation in the open rooms (needs `tests/axe.min.js`) |
+| `a11y.test.js` | axe-core finds no serious or critical violation in the open rooms, measured on the settled page with the entrance fades switched off (needs `tests/axe.min.js`) |
 | `review.test.js` | the defects the 9s62 review found, each shown fixed: a second Keep keeps the first edits; blocks and copies on one part stay put over many passes and moves; a version kept under 9s61 runs one Studio on the stage; Clean never hangs; Merge keeps this device's copies; the library tells its listeners; the Editing panel fits a short window; a full device is said in Files; the comparison is fast and speaks French; the Studio's second copy of the edits travels in the zip; Remove takes the row pressed |
 
 A failure prints the step that failed and leaves screenshots in `tests/out/`.
