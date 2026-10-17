@@ -52,17 +52,23 @@ JS = r'''<script id="cd-9s62-storage-js">
       r.onerror=function(){ res(out); }; r.onblocked=function(){ res(out); }; }catch(e){ res(out); } }); }
   function localSize(){ var n=0; try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); n+=(k.length+(localStorage.getItem(k)||'').length)*2; } }catch(e){} return n; }
   function filesSizes(){ try{ return window.__forgeBackup.files().then(function(l){ return l.map(function(r){ return {id:r.id,name:r.name,size:r.size||0}; }); }, function(){ return []; }); }catch(e){ return Promise.resolve([]); } }
-  function libSizes(){ try{ return window.__forgeLib.sizes(); }catch(e){ return Promise.resolve({}); } }
+  var LIBERR='';
+  function libSizes(){ LIBERR=''; try{ return window.__forgeLib.sizes().then(null, function(e){ LIBERR=(e&&e.code)||'error'; return {}; }); }catch(e){ LIBERR='error'; return Promise.resolve({}); } }
   function estimate(){ try{ if(navigator.storage&&navigator.storage.estimate) return navigator.storage.estimate().then(function(e){ return e||{}; }, function(){ return {}; }); }catch(e){} return Promise.resolve({}); }
-  var LAST=null, busy=false;
-  function measure(quiet){ if(busy) return Promise.resolve(LAST); busy=true;
-    return Promise.all([estimate(), libSizes(), filesSizes(), studioSizes()]).then(function(r){ busy=false;
+  var LAST=null, pending=null;
+  /* a source that never answers (a store whose open never settles) is answered for after twelve seconds, so one hung measure never
+     holds the card for the rest of the session; a measure asked for while one is running gets that one (measured: the old 'busy'
+     flag answered at once with nothing, and Clean then asked again without end, and the page froze) */
+  function within(p,ms,fb){ return new Promise(function(res){ var done=false, t=setTimeout(function(){ if(!done){ done=true; res(fb); } },ms); Promise.resolve(p).then(function(v){ if(!done){ done=true; clearTimeout(t); res(v); } }, function(){ if(!done){ done=true; clearTimeout(t); res(fb); } }); }); }
+  function measure(quiet){ if(pending) return pending;
+    pending=Promise.all([within(estimate(),12000,{}), within(libSizes(),12000,{}), within(filesSizes(),12000,[]), within(studioSizes(),12000,{apps:0,edits:0,list:[]})]).then(function(r){ pending=null;
       var est=r[0], lib=r[1], files=r[2], st=r[3], libN=0, libList=[];
       Object.keys(lib).forEach(function(k){ libN+=lib[k].size||0; libList.push(lib[k]); });
       var filesN=files.reduce(function(a,b){ return a+(b.size||0); },0), ls=localSize();
       var own=libN+filesN+st.apps+st.edits+ls;
       LAST={est:est, lib:libList, libN:libN, files:files, filesN:filesN, studio:st, ls:ls, own:own, at:Date.now()};
-      paint(); policy(quiet); return LAST; }, function(){ busy=false; return LAST; }); }
+      paint(); policy(quiet); return LAST; }, function(){ pending=null; return LAST; });
+    return pending; }
   function limitBytes(){ var m=parseInt(rec('limitMB')||'',10); return (m>0)?m*1048576:0; }
   function level(){ if(!LAST) return ''; var lim=limitBytes(), used=LAST.own, quota=(LAST.est&&LAST.est.quota)||0, usage=(LAST.est&&LAST.est.usage)||0;
     var ratio = lim ? used/lim : (quota ? Math.max(usage,used)/quota : 0);
@@ -78,7 +84,7 @@ JS = r'''<script id="cd-9s62-storage-js">
     var L=$('stLines'); L.innerHTML='';
     function line(k,d,v){ L.insertAdjacentHTML('beforeend','<span class="st-k">'+esc(k)+'</span><span class="st-d">'+esc(d)+'</span><span class="st-v">'+esc(v)+'</span>'); }
     var byApp={}; LAST.lib.forEach(function(x){ (byApp[x.app]=byApp[x.app]||[]).push(x); });
-    var apps=Object.keys(byApp); if(!apps.length) line(T('App copies','Copies des apps'), T('no copy kept yet','aucune copie gardée'), MB(0));
+    var apps=Object.keys(byApp); if(!apps.length) line(T('App copies','Copies des apps'), LIBERR==='noidb'?T('this device keeps no store for them (switched off, or a private window)','cet appareil n’a pas de mémoire pour elles (coupée, ou fenêtre privée)'):(LIBERR?T('the store did not answer','la mémoire n’a pas répondu'):T('no copy kept yet','aucune copie gardée')), MB(0));
     apps.forEach(function(a){ var l=byApp[a], n=l.filter(function(x){ return x.slot==='newest'; })[0], e=l.filter(function(x){ return x.slot==='earlier'; })[0];
       line(NAMES[a]||a, (n?T('newest ','la plus récente ')+(n.version||'')+(n.source==='made'?T(' (your version)',' (votre version)'):''):'')+(e?T(' · earlier ',' · précédente ')+(e.version||''):''), MB(l.reduce(function(s,x){ return s+(x.size||0); },0))); });
     line(T('Files','Fichiers'), LAST.files.length+T(' kept in Files',' gardés dans Fichiers'), MB(LAST.filesN));
@@ -98,16 +104,19 @@ JS = r'''<script id="cd-9s62-storage-js">
   function dropList(list, why){ var freed=0, names=[], p=Promise.resolve();
     list.forEach(function(x){ p=p.then(function(){ return window.__forgeLib.drop(x.app,'earlier').then(function(){ freed+=x.size||0; names.push((NAMES[x.app]||x.app)+' '+(x.version||'')); }, function(){}); }); });
     return p.then(function(){ return {freed:freed, names:names}; }); }
-  function clean(){ if(!LAST){ return measure().then(clean); } var list=earlierCopies();
+  function clean(){ if(!LAST){ return measure().then(function(l){ if(!l){ report(T('The store could not be measured yet; try again in a moment.','Le stockage n’a pas pu être mesuré ; réessayez dans un instant.'),true); return; } return clean(); }); } var list=earlierCopies();
     if(!list.length){ report(T('Nothing to clean: no earlier copy is kept. The newest copies, your files and your new apps are never removed here; remove one by name where it lives.','Rien à nettoyer : aucune copie précédente n’est gardée. Les copies les plus récentes, vos fichiers et vos nouvelles apps ne sont jamais retirés ici ; retirez-en un par son nom, là où il vit.')); return Promise.resolve(); }
     if(!confirm(T('Remove the earlier copy of '+list.map(function(x){ return NAMES[x.app]||x.app; }).join(', ')+'? The newest copy of each app stays. This frees about '+MB(list.reduce(function(s,x){ return s+(x.size||0); },0))+'.','Retirer la copie précédente de '+list.map(function(x){ return NAMES[x.app]||x.app; }).join(', ')+' ? La copie la plus récente de chaque app reste. Cela libère environ '+MB(list.reduce(function(s,x){ return s+(x.size||0); },0))+'.'))) return Promise.resolve();
     return dropList(list).then(function(r){ var t=T('Cleaned: ','Nettoyé : ')+(r.names.join(', ')||T('nothing','rien'))+T(' removed, about ',' retirée, environ ')+MB(r.freed)+T(' freed. The newest copies stay.',' libérés. Les copies les plus récentes restent.'); report(t); diary(t); return measure(true); }); }
   /* the policy: when she asked for it and the limit is near, the earlier copies go, oldest first, until there is room */
-  var toldAt=0;
+  var toldAt=0, tidyFailedAt=0;
   function policy(quiet){ if(!LAST) return; var lim=limitBytes(), lv=level(); if(!lv) return;
-    if(rec('auto')==='1' && lim){ var list=earlierCopies(), need=LAST.own-lim*0.8, take=[], sum=0;
+    if(rec('auto')==='1' && lim && Date.now()-tidyFailedAt>600000){ var list=earlierCopies(), need=LAST.own-lim*0.8, take=[], sum=0;
       for(var i=0;i<list.length && sum<need;i++){ take.push(list[i]); sum+=list[i].size||0; }
-      if(take.length){ dropList(take).then(function(r){ var t=T('The limit was near, so the Forge tidied by itself: the earlier copy of ','La limite approchait : la Forge a rangé seule la copie précédente de ')+r.names.join(', ')+T(' removed, about ',' retirée, environ ')+MB(r.freed)+T(' freed.',' libérés.'); report(t); diary(t); try{ if(window.__forgeLibPaint) window.__forgeLibPaint(); }catch(e){} measure(true); }); return; } }
+      if(take.length){ dropList(take).then(function(r){
+          /* nothing went: the device refused, so the tidying rests for ten minutes instead of trying again at once (measured: the retries filled the diary and emptied it of everything else) */
+          if(!r.names.length){ tidyFailedAt=Date.now(); var f=T('The limit is near and the Forge tried to tidy, but the device refused to remove the earlier copies. Press Clean the library to try again, remove files in Files, or raise the limit.','La limite approche et la Forge a tenté de ranger, mais l’appareil a refusé de retirer les copies précédentes. Appuyez sur Nettoyer la bibliothèque pour réessayer, retirez des fichiers dans Fichiers, ou relevez la limite.'); report(f,true); diary(f); return; }
+          var t=T('The limit was near, so the Forge tidied by itself: the earlier copy of ','La limite approchait : la Forge a rangé seule la copie précédente de ')+r.names.join(', ')+T(' removed, about ',' retirée, environ ')+MB(r.freed)+T(' freed.',' libérés.'); report(t); diary(t); toldAt=Date.now(); measure(true); }); return; } }
     if(!quiet || Date.now()-toldAt>600000){ toldAt=Date.now(); report(lv==='full'?T('Storage is nearly full. Press Clean the library, remove files you no longer need in Files, or raise the limit.','Le stockage est presque plein. Appuyez sur Nettoyer la bibliothèque, retirez dans Fichiers ce dont vous n’avez plus besoin, ou relevez la limite.'):T('Storage is getting close to its limit.','Le stockage approche de sa limite.'), lv==='full'); } }
   function wire(){ var card=$('storageCard'); if(!card||card.__wired) return; card.__wired=true;
     $('stRefresh').onclick=function(){ report(T('Measuring…','Mesure…')); measure().then(function(){ if(!level()) report(T('Measured just now.','Mesuré à l’instant.')); }); };
@@ -119,7 +128,7 @@ JS = r'''<script id="cd-9s62-storage-js">
   function start(){ if(!seat()){ setTimeout(start,700); return; }
     setTimeout(function(){ measure(true); }, 2500);
     /* measured again when the library changes, when Settings opens, and every ten minutes while the Forge is open */
-    try{ var old=window.__forgeLibPaint; window.__forgeLibPaint=function(){ try{ if(old) old.apply(this,arguments); }catch(e){} clearTimeout(start.t); start.t=setTimeout(function(){ measure(true); },1500); }; }catch(e){}
+    window.addEventListener('forge:lib', function(){ clearTimeout(start.t); start.t=setTimeout(function(){ measure(true); },1500); });
     document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-room="settings"], .nav-btn'); if(b && /settings|réglages/i.test(b.textContent||'')) setTimeout(function(){ measure(true); },300); }, true);
     setInterval(function(){ measure(true); }, 600000);
     try{ new MutationObserver(function(){ paint(); }).observe(document.documentElement,{attributes:true,attributeFilter:['lang']}); }catch(e){} }

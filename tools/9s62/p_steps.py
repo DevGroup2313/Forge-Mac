@@ -1,4 +1,11 @@
 """9s62 · the Editor's steps in the order she meets them: 1 the file, 2 the whole app (the Studio), 3 named surfaces, 4 change it, 5 download."""
+EN2 = '"In 2, The whole app: choose any page of the app, press \\"✋ Point at a part\\" and click the part on the right. Change it below; the preview follows you. Each change is kept on this device, twice, until you keep it as a new version."'
+EN3 = '"In 3, Pick a named surface: the quick way to show, hide, rename, reorder or colour a part the app registered (its rail, its door, its top bar)."'
+EN4 = '"In 4, Change it: the words, the order, the colour. The preview on the right follows at once."'
+FRW = '"Pour toute l’app, chaque page : ouvrez « ✍️ L’app entière », choisissez une page, appuyez sur « ✋ Montrer une partie » et cliquez la partie à droite. Changez-la dessous ; l’aperçu vous suit. Chaque changement est gardé sur cet appareil, deux fois, jusqu’à ce que vous le gardiez comme nouvelle version."'
+FR2 = '"En 2, L’app entière : choisissez n’importe quelle page de l’app, appuyez sur « ✋ Montrer une partie » et cliquez la partie à droite. Changez-la dessous ; l’aperçu vous suit. Chaque changement est gardé sur cet appareil, deux fois, jusqu’à ce que vous le gardiez comme nouvelle version."'
+FR3 = '"En 3, Choisir une surface nommée : le chemin rapide pour montrer, cacher, renommer, réordonner ou colorer une partie que l’app a nommée (son rail, sa porte, sa barre du haut)."'
+FR4 = '"En 4, La changer : les mots, l’ordre, la couleur. L’aperçu à droite suit aussitôt."'
 def apply(P):
     P.replace_once('<summary><span class="n">2</span><span class="t">🧭 Pick a surface</span>', '<summary><span class="n">3</span><span class="t">🧭 Pick a named surface (the quick way)</span>', 'fold surface 3')
     P.replace_once('<summary><span class="n">3</span><span class="t">🎛️ Change it</span>', '<summary><span class="n">4</span><span class="t">🎛️ Change it</span>', 'fold controls 4')
@@ -29,8 +36,15 @@ def apply(P):
                      ('In step 2 the surfaces are listed', 'In step 3 the surfaces are listed'), ('press Export (JSON) in step 4', 'press Export (JSON) in step 5'),
                      ('Les surfaces de l’étape 2 sont celles', 'Les surfaces de l’étape 3 sont celles'), ('et l’étape 4 rend ', 'et l’étape 5 rend '),
                      ('The surfaces in step 2 are ', 'The surfaces in step 3 are '), (', and step 4 hands ', ', and step 5 hands '),
-                     ('Its surfaces (step 2) and free CSS work instead.', 'Its surfaces (step 3) and free CSS work instead.')):
+                     ('Its surfaces (step 2) and free CSS work instead.', 'Its surfaces (step 3) and free CSS work instead.'),
+                     # the French twin of that refusal is written with escapes in the file
+                     ('Ses surfaces (\\u00e9tape 2) et le CSS libre marchent \\u00e0 la place.', 'Ses surfaces (\\u00e9tape 3) et le CSS libre marchent \\u00e0 la place.'),
+                     # the Guidebook's shipping article (stale since 9s58, when Download was 4)
+                     ('<p>Step 3 makes real files. <b>Download the edited Carpe Diem</b>', '<p>Step 5 makes real files. <b>Download the edited Carpe Diem</b>')):
         P.replace_all(old, new, 'steps: ' + old[:30])
+    # the Editor's help list in the order of the folds (2, 3, 4), in both languages
+    P.replace_once(EN3 + ', ' + EN4 + ', ' + EN2, EN2 + ', ' + EN3 + ', ' + EN4, 'help order en')
+    P.replace_once(FR3 + ', ' + FR4 + ', ' + FRW, FR2 + ', ' + FR3 + ', ' + FR4, 'help order fr')
     # the walkthrough's cards name the folds by number
     for old, new in (('In <b>2, Pick a surface</b>', 'In <b>3, Pick a named surface</b>'), ('In <b>3, Change it</b>', 'In <b>4, Change it</b>'), ('In <b>4, Download the app</b>', 'In <b>5, Download the app</b>'),
                      ('En <b>2, Choisir une surface</b>', 'En <b>3, Choisir une surface nommée</b>'), ('En <b>3, La changer</b>', 'En <b>4, La changer</b>'), ('En <b>4, Télécharger l’app</b>', 'En <b>5, Télécharger l’app</b>')):

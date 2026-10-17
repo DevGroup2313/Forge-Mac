@@ -8,7 +8,7 @@ ROOT=$(pwd)
 ( cd tests/www && npx --yes http-server -p "$FORGE_PORT" -s >/dev/null 2>&1 & echo $! > "$ROOT/tests/out/server.pid" )
 sleep 2
 fails=0
-for t in boot studio library storage_backup compare a11y; do
+for t in boot studio library storage_backup compare a11y review; do
   echo "=== $t ==="
   if node "tests/$t.test.js"; then echo "--- $t: passed"; else echo "--- $t: FAILED"; fails=$((fails+1)); fi
 done

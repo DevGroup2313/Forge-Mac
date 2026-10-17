@@ -14,6 +14,7 @@ Each test takes the apps it works on from environment variables (defaults in `te
 
     FORGE_HTML      the file to test (default: ./the_forge.html)
     INGENIUM_HTML   a full ingenium.html, INKWELL_HTML an Inkwell.html, CARPE_HTML a Carpe Diem index.html
+    FORGE_BASE_61   (review test only) the 9s61 the_forge.html, whose old applier is planted in a test version
 
 Tests that need an app file skip, and say so, when the file is absent.
 
@@ -27,5 +28,6 @@ Tests that need an app file skip, and say so, when the file is absent.
 | `storage_backup.test.js` | the Storage card measures, a limit warns, Clean the library frees the earlier copies, the zip backup exports and reads back whole into a fresh profile |
 | `compare.test.js` | two kept versions compare in words and by line; the same file twice says so |
 | `a11y.test.js` | axe-core finds no serious or critical violation in the open rooms (needs `tests/axe.min.js`) |
+| `review.test.js` | the defects the 9s62 review found, each shown fixed: a second Keep keeps the first edits; blocks and copies on one part stay put over many passes and moves; a version kept under 9s61 runs one Studio on the stage; Clean never hangs; Merge keeps this device's copies; the library tells its listeners; the Editing panel fits a short window; a full device is said in Files; the comparison is fast and speaks French; the Studio's second copy of the edits travels in the zip; Remove takes the row pressed |
 
 A failure prints the step that failed and leaves screenshots in `tests/out/`.

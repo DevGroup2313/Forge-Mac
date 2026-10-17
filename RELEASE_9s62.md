@@ -58,7 +58,7 @@ Forge itself. The scripts are in `tests/` and run with `sh tests/run.sh`.
   made to abort, cleaned up; the browser's own reading of its storage, persist, the zip streams, SHA-256
   both ways, and the library's own records read back at their recorded sizes.
 - `tests/`: a Playwright suite (boot, studio with all four apps, library, storage and backup, compare,
-  axe-core accessibility) with a runner and a README.
+  axe-core accessibility, and the review's fixes) with a runner and a README.
 
 ### Accessibility
 - axe-core 4.10 over every room: 25 findings in 9s61 (tab roles, the resize handle's value, heading
@@ -80,6 +80,26 @@ Forge itself. The scripts are in `tests/` and run with `sh tests/run.sh`.
   when) and a way to stop; the doing comes before the naming; every lesson points at Carpe Diem, Inkwell,
   Ingenium or the Forge; year 1 runs on the right, years 2 and 3 predict then check and send you to the
   Terminal on your Mac; the ids are unchanged, so what you had read stays read.
+
+### The review, and what it changed
+After the first build, every patch was read again adversarially (each claim traced in the built file and in
+Chromium) and the real defects were mended; the list is in `tools/9s62/README.txt`. The ones you would have met:
+- A second **Keep** in the Studio used to drop the edits already in the version's code. Now they stay, and the
+  new ones join them. Verified by keeping twice in Ingenium.
+- Two pasted blocks (or a block and a copy) on one part multiplied on every redraw; a part moved beside another's
+  block did the same. Fixed in the applier; verified over five passes.
+- A version kept under 9s61 ran two Studios on the stage, which fought over the colours. One runs now.
+- **Merge** in the zip restore could overwrite your own version of an app with the zip's older copy. Merge now
+  keeps what is here. The Studio's second copy of the edits travels in the zip too.
+- **Clean the library** pressed during the first measure could freeze the page; a refused tidy could flood the
+  diary. Both gone.
+- A full device aborted a Files write silently; the refusal is now said in plain words (verified with a 200 KB
+  quota).
+- **Compare two versions** of the Forge itself took fifteen seconds; now about sixty milliseconds.
+- Removing a new app by name could remove the wrong one when two shared a name; Remove now takes the row pressed.
+- The Editing panel's height follows its key, so its foot never leaves a short window.
+- Five C++ programs in year 3 lacked their `#include` lines; added, and every whole program in year 3 compiles
+  except the four whose lessons are about the compiler's refusal.
 
 ## Installing
 

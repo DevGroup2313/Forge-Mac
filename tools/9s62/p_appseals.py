@@ -3,7 +3,8 @@ import os, json
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def apply(P):
-    seals = json.load(open(os.path.join(HERE, '..', 'seals', 'seals.json')))
+    _sp = [os.path.join(HERE, 'seals', 'seals.json'), os.path.join(HERE, '..', 'seals', 'seals.json')]
+    seals = json.load(open([p for p in _sp if os.path.exists(p)][0], encoding='utf-8'))
     data = {'cd': {'day': seals['cd_day'], 'night': seals['cd_night']},
             'inkwell': {'day': seals['inkwell_day'], 'night': seals['inkwell_night']},
             'ingenium': {'day': seals['ingenium_day'], 'night': seals['ingenium_night']}}
@@ -49,7 +50,8 @@ html:not(#hd1):not(#hd2):not(#hd3):not(#hd4):not(#hd5):not(#hd6):not(#hd7) body.
   function T(en,fr){ return document.documentElement.lang==='fr'?fr:en; }
   var busy=false;
   function status(){ if(busy||!window.__forgeLib||!document.getElementById('edAppSeg')) return; busy=true;
-    window.__forgeLib.meta().then(function(M){ busy=false; M=M||{};
+    /* the cached list, not a fresh read: a fresh read empties the library's cache for a moment, and the switch then mounted the default file over a kept copy (measured) */
+    (window.__forgeLib.metaCached||window.__forgeLib.meta)().then(function(M){ busy=false; M=M||{};
       [].forEach.call(document.querySelectorAll('#edAppSeg button[data-app]'), function(b){ var k=b.getAttribute('data-app'); if(k==='other') k='any';
         var s=b.querySelector('.edapp-s'); if(!s){ s=document.createElement('small'); s.className='edapp-s'; b.appendChild(s); }
         var m=M[k+':newest'], t;
@@ -57,12 +59,24 @@ html:not(#hd1):not(#hd2):not(#hd3):not(#hd4):not(#hd5):not(#hd6):not(#hd7) body.
         else if(!m) t=T('no copy yet','pas encore de copie');
         else t=(m.version||'')+(m.source==='made'?T(' · your version',' · votre version'):T(' · kept here',' · gardée ici'));
         if(s.textContent!==t) s.textContent=t; });
+      fitPanel();
     }, function(){ busy=false; }); }
+  /* 9s62: the panel's room is taken from where its key stands, so its foot never runs past the window: below the key when there is
+     room, above it when there is more room there, and it scrolls within that room (a fixed allowance left the last rows out of reach
+     on a short screen, measured) */
+  function fitPanel(){ var p=document.querySelector('body.forge-app .hd-appkey-wrap > .hd-panel[data-open]'); if(!p) return; var k=p.parentNode&&p.parentNode.querySelector('button[aria-controls="'+p.id+'"]'); if(!k) return;
+    var kr=k.getBoundingClientRect(), below=Math.floor(window.innerHeight-kr.bottom-16), above=Math.floor(kr.top-16);
+    p.style.removeProperty('max-height'); var need=p.scrollHeight+2, up=!(need<=below)&&(need<=above||above>below), room=up?above:below;
+    if(up){ p.style.setProperty('top','auto','important'); p.style.setProperty('bottom','calc(100% + 6px)','important'); } else { p.style.removeProperty('top'); p.style.removeProperty('bottom'); }
+    p.style.setProperty('max-height', Math.max(120, Math.min(room, need))+'px', 'important'); }
+  function fitWatch(){ try{ new MutationObserver(function(ms){ for(var i=0;i<ms.length;i++){ var t=ms[i].target; if(t&&t.classList&&t.classList.contains('hd-panel')){ fitPanel(); return; } } }).observe(document.body,{attributes:true,attributeFilter:['data-open'],subtree:true}); }catch(e){}
+    window.addEventListener('resize', fitPanel); }
   var t0=null; function soon(){ clearTimeout(t0); t0=setTimeout(status, 120); }
   function start(){ var seg=document.getElementById('edAppSeg'); if(!seg){ setTimeout(start, 500); return; }
     try{ new MutationObserver(soon).observe(seg,{childList:true,subtree:true}); }catch(e){}
     document.addEventListener('click', function(e){ var k=e.target.closest&&e.target.closest('.hd-appkey'); if(k) soon(); }, true);
-    try{ var old=window.__forgeLibPaint; window.__forgeLibPaint=function(){ try{ if(old) old.apply(this, arguments); }catch(e){} soon(); }; }catch(e){}
+    /* the library says 'forge:lib' on the window whenever a copy is kept, opened or dropped (measured: the paint hook alone was never called by the library itself) */
+    window.addEventListener('forge:lib', soon); fitWatch();
     soon(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

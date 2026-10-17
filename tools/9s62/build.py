@@ -3,7 +3,7 @@ import sys, os, importlib
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from forgepatch import Patcher
-BASE = os.path.join(HERE, '..', 'base_9s61.html')
+BASE = os.environ.get('FORGE_BASE') or os.path.join(HERE, '..', 'base_9s61.html')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, '..', 'www', 'the_forge.html')
 ORDER = [m for m in os.environ.get('FORGE_PATCHES', 'p_studio,p_appseals').split(',') if m]
 text = open(BASE, encoding='utf-8').read()

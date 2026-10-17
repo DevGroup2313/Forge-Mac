@@ -25,6 +25,14 @@
     if(!e&&ed.dup)e=q('[data-forge-dup="'+ed.dup+'"]');
     if(!e&&ed.sel)e=q(ed.sel);
     if(e)mark(e,ed.k);return e;}
+  /* the copies and blocks placed after a part stand in a run right after it; one is found anywhere in that run, so two on one
+     part never make each other again (measured: with two blocks on one part, each pass added both once more) */
+  function after(e,attr,id){var p=e.parentNode||document;try{return p.querySelector('['+attr+'="'+String(id).replace(/[^\w.-]/g,'')+'"]');}catch(x){return null;}}
+  /* a part and the copies and blocks that stand after it form one run: it moves as one, and another part lands after the whole run
+     (measured: a part moved between another part and its block made that block anew on every pass) */
+  function isTail(n){return !!(n&&n.hasAttribute&&(n.hasAttribute('data-forge-dup')||n.hasAttribute('data-forge-html')));}
+  function endOf(e){var n=e;while(n.nextElementSibling&&isTail(n.nextElementSibling))n=n.nextElementSibling;return n;}
+  function runOf(e){var out=[e],n=e;while(n.nextElementSibling&&isTail(n.nextElementSibling)){n=n.nextElementSibling;out.push(n);}return out;}
   function setWords(e,v){
     if(!e.children.length){if(e.textContent!==v)e.textContent=v;return;}
     for(var n=e.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.nodeValue.trim()){var lead=/^\s*/.exec(n.nodeValue)[0],tail=/\s*$/.exec(n.nodeValue)[0];
@@ -43,14 +51,15 @@
         if(ed.kind==='text')setWords(e,String(ed.value));
         else if(ed.kind==='attr'){if(ed.value==null||ed.value==='')e.removeAttribute(ed.prop);else if(e.getAttribute(ed.prop)!==String(ed.value))e.setAttribute(ed.prop,String(ed.value));}
         else if(ed.kind==='move'){var r=null;try{r=document.querySelector('[data-fs~="'+ed.refk+'"]')||q(ed.ref);}catch(x){}
-          if(r&&r!==e&&r.parentNode&&e.parentNode===r.parentNode){if(ed.where==='before'&&e.nextElementSibling!==r)r.parentNode.insertBefore(e,r);
-            else if(ed.where==='after'&&r.nextElementSibling!==e)r.parentNode.insertBefore(e,r.nextSibling);}}
-        else if(ed.kind==='dup'){var nx=e.nextElementSibling;if(!(nx&&nx.getAttribute('data-forge-dup')===String(ed.id))){var c=e.cloneNode(true);
+          if(r&&r!==e&&r.parentNode&&e.parentNode===r.parentNode){var run=runOf(e);
+            if(ed.where==='before'&&endOf(e).nextElementSibling!==r){run.forEach(function(x){r.parentNode.insertBefore(x,r);});}
+            else if(ed.where==='after'&&endOf(r).nextElementSibling!==e){var at=endOf(r).nextSibling;run.forEach(function(x){r.parentNode.insertBefore(x,at);});}}}
+        else if(ed.kind==='dup'){if(!after(e,'data-forge-dup',ed.id)){var c=e.cloneNode(true);
             c.setAttribute('data-forge-dup',String(ed.id));c.removeAttribute('id');c.removeAttribute('data-fs');
             Array.prototype.forEach.call(c.querySelectorAll('[id],[data-fs]'),function(x){x.removeAttribute('id');x.removeAttribute('data-fs');});
             e.parentNode.insertBefore(c,e.nextSibling);}}
         else if(ed.kind==='html'){ /* 9s62: a block of the owner's own HTML after the part, data never run: scripts and handlers are taken out */
-          var ex=e.nextElementSibling;if(!(ex&&ex.getAttribute('data-forge-html')===String(ed.id))){var box=document.createElement('div');box.setAttribute('data-forge-html',String(ed.id));box.innerHTML=String(ed.value||'');
+          if(!after(e,'data-forge-html',ed.id)){var box=document.createElement('div');box.setAttribute('data-forge-html',String(ed.id));box.innerHTML=String(ed.value||'');
             Array.prototype.forEach.call(box.querySelectorAll('script,iframe,object,embed'),function(x){x.remove();});
             Array.prototype.forEach.call(box.querySelectorAll('*'),function(x){for(var i=x.attributes.length-1;i>=0;i--){var a=x.attributes[i];if(/^on/i.test(a.name)||/^\s*javascript:/i.test(a.value))x.removeAttribute(a.name);}});
             e.parentNode.insertBefore(box,e.nextSibling);}}});
