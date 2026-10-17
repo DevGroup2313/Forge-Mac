@@ -95,6 +95,13 @@ suite run again). In the order of the patches:
                 its prediction checked, is now brought up to date in place; a lesson already read shows its answer.
                 The term's and the year's counts follow too, and Try it on the right retires the lesson's Mark as read key.
                 The close-tag escape is case-insensitive; the magUnits anchors are checked once each.
+  p_stamp       the Guidebook's glossary entry 'Version and build' still said build 629; it says 630.
+  curriculum    the year 1 lessons were read against the Forge as it is, and nine wordings mended: w01 (what ⬑ around it
+                names; the head is everything before the body; the title shows in Code, not in a tab of the preview),
+                w04 (the listing matches the box; the Studio is step 2 and says Field for a tick box too), w05 (no 'silent
+                rules' check stands alone), w06 (one box becomes the pill and the square), w08 (the three order numbers),
+                w10 (the button's real name; greet is one step; what the Diary records), w11 (the note is yours to
+                change; the rule is .box.on);
   curriculum    five C++ programs in year 3 lacked their #include lines (c04, c08, c11); every whole program in
                 year 3 now compiles except the four whose lessons are about the compiler's refusal (c01, c08 private,
                 c09 three files, c11), and every Python snippet in year 2 runs.
