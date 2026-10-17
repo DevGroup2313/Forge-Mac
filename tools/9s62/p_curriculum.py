@@ -7,7 +7,11 @@ def apply(P):
         f = os.path.join(HERE, '..', 'curriculum', y + '.js')
         if not os.path.exists(f):
             f = os.path.join(HERE, 'curriculum', y + '.js')
-        parts.append(open(f, encoding='utf-8').read().rstrip() + '\n')
+        src = open(f, encoding='utf-8').read().rstrip() + '\n'
+        # a closing script tag inside a lesson's string would end the page's own script element: escaped, as the house does
+        src = src.replace('</script>', '<\\/script>')
+        assert '</script' not in src
+        parts.append(src)
     start = 'var CURRICULUM_Y1={id:\'web\', year:1,'
     end = 'var CURRICULUM=[CURRICULUM_Y1,CURRICULUM_Y2,CURRICULUM_Y3];'
     P.must_once(start, 'curriculum start'); P.must_once(end, 'curriculum end')
