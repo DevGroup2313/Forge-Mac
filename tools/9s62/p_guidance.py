@@ -12,7 +12,8 @@ JS = r'''<script id="cd-9s62-guidance-js">
   function fr(){ return document.documentElement.lang==='fr'; }
   function T(en,f){ return fr()?f:en; }
   function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function level(v){ try{ if(v===undefined) return localStorage.getItem('fg:level')||'first'; localStorage.setItem('fg:level', v); }catch(e){ return 'first'; } }
+  var LV='first';   /* the level in memory too: a device whose small store reads but refuses to write still keeps her choice for the session */
+  function level(v){ if(v===undefined){ try{ return localStorage.getItem('fg:level')||LV; }catch(e){ return LV; } } LV=v; try{ localStorage.setItem('fg:level', v); }catch(e){} }
   var LEVELS=[['first', 'First day', 'Premier jour', 'Everything explained, and a line of context as each step opens.', 'Tout expliqué, et une ligne de contexte à l’ouverture de chaque étape.'],
               ['going', 'Finding my way', 'Je trouve mon chemin', 'The lists on each card, nothing more.', 'Les listes de chaque carte, rien de plus.'],
               ['ease', 'At ease', 'À l’aise', 'The cards folded to a line; the walkthrough terse.', 'Les cartes repliées en une ligne ; la visite brève.']];
@@ -36,25 +37,33 @@ JS = r'''<script id="cd-9s62-guidance-js">
   function applyLevel(){ var lv=level(); document.documentElement.setAttribute('data-fg-level', lv);
     Array.prototype.forEach.call(document.querySelectorAll('.fg-help'), function(d){ var room=d.getAttribute('data-fg-room'); var ch=d.querySelector('.fg-lv-row'); if(!ch){ ch=document.createElement('div'); ch.className='fg-lv-row'; var body=d.querySelector('.fold-body'); if(body) body.insertBefore(ch, body.firstChild); } paintChooser(ch);
       var s=d.querySelector('summary .s'); if(s){ var st = lv==='ease' ? T('at ease','à l’aise') : (lv==='going' ? T('first, then next','d’abord, ensuite') : T('first day: everything said','premier jour : tout est dit')); if(s.textContent!==st) s.textContent=st; }
-      try{ var closed=localStorage.getItem('fg:closed:'+room); if(closed==null){ d.open = lv!=='ease'; } }catch(e){} });
+      /* folded or open once, when the card is first seen or the level changes; never again on a passing mutation (measured: a card she had folded by hand sprang open on a device that refused to remember it) */
+      if(APPLIED[room]!==lv){ APPLIED[room]=lv; var closed=null; try{ closed=localStorage.getItem('fg:closed:'+room); }catch(e){} if(closed==null){ d.open = lv!=='ease'; } } });
     Array.prototype.forEach.call(document.querySelectorAll('.fg-lv'), function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-fg-level')===lv?'true':'false'); });
-    var st=$('fgLevelSettings'); if(st) paintChooser(st); }
-  document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.fg-lv'); if(!b) return; e.preventDefault(); level(b.getAttribute('data-fg-level')); try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf('fg:closed:')===0) localStorage.removeItem(k); }); }catch(x){} applyLevel();
+    var st=$('fgLevelSettings'); if(st) paintChooser(st);
+    var card=$('fgLevelCard'); if(card){ var h3=card.querySelector('h3'), pp=card.querySelector('p'); var ht=T('How much the Forge explains','Combien la Forge explique'), pt=T('Chosen once, kept on this device, changed any time here or on the help card of any room. Nothing is scored; only the words change.','Choisi une fois, gardé sur cet appareil, changé à tout moment ici ou sur la carte d’aide de toute pièce. Rien n’est noté ; seuls les mots changent.'); if(h3&&h3.textContent!==ht) h3.textContent=ht; if(pp&&pp.textContent!==pt) pp.textContent=pt; } }
+  var APPLIED={};
+  document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.fg-lv'); if(!b) return; e.preventDefault(); level(b.getAttribute('data-fg-level')); try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf('fg:closed:')===0) localStorage.removeItem(k); }); }catch(x){} APPLIED={}; applyLevel();
     var L=LEVELS.filter(function(x){ return x[0]===level(); })[0]; try{ window.__forgeEd.teach('fgLevel',{name:fr()?L[2]:L[1], about:fr()?L[4]:L[3]}); }catch(x){} }, true);
   /* the walkthrough's why, at First day; terse at ease */
-  function dressWalk(){ var p=$('fg-walk'); if(!p||p.hidden) return; var lv=level(), body=p.children[1]; if(!body) return; var sig=lv+'|'+(p.querySelector('.fg-w-h span')||{}).textContent; if(p.__why===sig) return; p.__why=sig; var old=p.querySelector('.fg-why'); if(old) old.remove();
+  function dressWalk(){ var p=$('fg-walk'); if(!p||p.hidden) return; var lv=level(), body=p.children[1]; if(!body) return; var sig=lv+'|'+(fr()?'fr':'en')+'|'+(p.querySelector('.fg-w-h span')||{}).textContent; if(p.__why===sig && (lv!=='first' || p.querySelector('.fg-why'))) return; p.__why=sig; var old=p.querySelector('.fg-why'); if(old) old.remove();
     if(lv==='first'){ var m=/data-fgw="there"/.test(p.innerHTML); var t=p.querySelector('.fg-w-h span'); var n=t?parseInt((t.textContent.match(/(\d+)\s*\//)||[])[1],10):0; var keys=['#edAppRow','#fold-surface','#fold-controls','#fold-ship','#shipAllBtn','#zipAppsBtn','#guideBody']; var w=WHY[keys[n-1]]; if(w){ var d=document.createElement('div'); d.className='fg-why'; d.textContent=fr()?w[1]:w[0]; body.insertAdjacentElement('afterend', d); } } }
   /* the context line: when a step of the Editor opens, at First day */
   function lessons(){ try{ var b=window.__forgeEd; if(!b||lessons.done) return; lessons.done=1;
     Object.keys(CTX).forEach(function(k){ b.lesson('ctx:'+k, function(){ return esc(fr()?CTX[k][1]:CTX[k][0]); }); });
     b.lesson('fgLevel', function(v){ return '<b>'+esc(v.name)+'</b>: '+esc(v.about)+' '+esc(T('Change it on any help card, or in Settings.','Changez-le sur toute carte d’aide, ou dans les Réglages.')); }); }catch(e){} }
-  var lastCtx='';
-  document.addEventListener('toggle', function(e){ var d=e.target; if(!d||d.tagName!=='DETAILS'||!d.open) return; if(level()!=='first') return; var k=d.id; if(!CTX[k]||lastCtx===k) return; lastCtx=k; try{ var tut=$('tutor'); if(tut && tut.getAttribute('data-on')!=='1'){ tut.setAttribute('data-on','1'); var tb=$('tutorBtn'); if(tb) tb.textContent=T('📘 Hide the line','📘 Masquer la ligne'); } window.__forgeEd.teach('ctx:'+k,{}); }catch(x){} }, true);
+  var lastCtx='', lastHand=0;
+  /* only a step she opened herself: a fold the Forge opens as it builds the page (the Studio's, at every load) says nothing (measured: it spoke at boot and brought back the line she had hidden) */
+  document.addEventListener('pointerdown', function(e){ if(e.target&&e.target.closest&&e.target.closest('summary')) lastHand=Date.now(); }, true);
+  document.addEventListener('keydown', function(e){ if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.closest&&e.target.closest('summary')) lastHand=Date.now(); }, true);
+  document.addEventListener('toggle', function(e){ var d=e.target; if(!d||d.tagName!=='DETAILS'||!d.open) return; if(level()!=='first') return; if(Date.now()-lastHand>1500) return; var k=d.id; if(!CTX[k]||lastCtx===k) return; lastCtx=k; try{ var tut=$('tutor'); if(tut && tut.getAttribute('data-on')!=='1'){ tut.setAttribute('data-on','1'); var tb=$('tutorBtn'); if(tb) tb.textContent=T('📘 Hide the line','📘 Masquer la ligne'); try{ remember('tutor','1'); }catch(x){} } window.__forgeEd.teach('ctx:'+k,{}); }catch(x){} }, true);
   function seatSettings(){ var lay=document.querySelector('#room-settings .page[data-page="layout"] .panel.card'); if(!lay||$('fgLevelCard')) return; lay.insertAdjacentHTML('afterend','<div class="panel card" id="fgLevelCard"><h3>'+T('How much the Forge explains','Combien la Forge explique')+'</h3><p class="muted" style="font-size:13px">'+T('Chosen once, kept on this device, changed any time here or on the help card of any room. Nothing is scored; only the words change.','Choisi une fois, gardé sur cet appareil, changé à tout moment ici ou sur la carte d’aide de toute pièce. Rien n’est noté ; seuls les mots changent.')+'</p><div class="fg-lv-row" id="fgLevelSettings"></div></div>'); paintChooser($('fgLevelSettings')); }
   function start(){ lessons(); applyLevel(); seatSettings();
     /* the watch answers only to what it cannot have caused: the help cards, the Settings card and the walkthrough appearing; it never rewrites what it has already written (every paint above compares first) */
-    try{ new MutationObserver(function(ms){ var mine=ms.every(function(m){ var t=m.target; return t&&t.closest&&t.closest('.fg-lv-row,#fgLevelCard,#fg-walk'); }); if(mine) return; clearTimeout(start.t); start.t=setTimeout(function(){ lessons(); applyLevel(); seatSettings(); dressWalk(); }, 150); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
-    try{ new MutationObserver(function(){ applyLevel(); }).observe(document.documentElement,{attributes:true,attributeFilter:['lang']}); }catch(e){} }
+    try{ new MutationObserver(function(ms){ var mine=ms.every(function(m){ var t=m.target; return t&&t.closest&&t.closest('.fg-lv-row,#fgLevelCard,#fg-walk'); });
+      if(ms.some(function(m){ var t=m.target; return t&&t.closest&&t.closest('#fg-walk'); })){ clearTimeout(start.w); start.w=setTimeout(dressWalk, 60); }   /* the walkthrough repainted itself: its why follows (measured: steps 4 and 5 had none until something unrelated moved) */
+      if(mine) return; clearTimeout(start.t); start.t=setTimeout(function(){ lessons(); applyLevel(); seatSettings(); dressWalk(); }, 150); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+    try{ new MutationObserver(function(){ applyLevel(); dressWalk(); }).observe(document.documentElement,{attributes:true,attributeFilter:['lang']}); }catch(e){} }
   window.__forgeGuidance={ level:level, apply:applyLevel };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 50);
 })();

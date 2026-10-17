@@ -76,9 +76,25 @@ suite run again). In the order of the patches:
                 was cut at 200 000 characters, is said; the hand's neighbour for a move skips the part's own run.
   p_selftest    the real error name is read from the request; the megabyte pattern is not all zeros at the sampled
                 points; the fold speaks French; 'copied' is said only when the clipboard took it.
+  p_a11y        the Guidebook chapter "Testing with a screen reader" was appended after the Guidebook had indexed its
+                chapters, so it was never listed, found or shown: it now stands in the markup, under Good to know; the
+                checker no longer takes a field's options for its name, checks every page of a room (the Editor's Edit
+                page was passed over while Troubleshoot was open), never hides the room she is in (its scroll went and
+                its entrance replayed), tallies in words and speaks French, names the fields in her language even over
+                a name baked in English, says 'copied' only when the clipboard took it; the handle's value follows a
+                drag and its range covers what the split allows.
+  p_guidance    the walkthrough's why was painted only when something unrelated moved after the walkthrough's own repaint
+                (steps 4 and 5 had none; a second start had none): the walkthrough's own repaints now call for it, in the
+                language of the moment; the context line spoke for a fold the Forge opens as it builds the page and brought
+                back the tutor line she had hidden: it speaks only for a step she opened herself, and remembers the line;
+                the help cards' fold was forced again on every mutation (a card folded by hand sprang open on a device that
+                refused to remember it): applied once per card and level, with the level held in memory as well; the
+                Settings card's words follow the language.
   p_curriculum  "Check my prediction" used to repaint the three rooms 1.5 s later, which hid the answer she was reading and
                 enabled the button again (and wiped an answer given meanwhile in the questions room): a lesson marked read, or
                 its prediction checked, is now brought up to date in place; a lesson already read shows its answer.
+                The term's and the year's counts follow too, and Try it on the right retires the lesson's Mark as read key.
+                The close-tag escape is case-insensitive; the magUnits anchors are checked once each.
   curriculum    five C++ programs in year 3 lacked their #include lines (c04, c08, c11); every whole program in
                 year 3 now compiles except the four whose lessons are about the compiler's refusal (c01, c08 private,
                 c09 three files, c11), and every Python snippet in year 2 runs.

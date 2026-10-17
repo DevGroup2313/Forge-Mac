@@ -154,15 +154,58 @@ const APPLIER_V2 = fs.readFileSync(path.join(__dirname, '..', 'tools', '9s62', '
       Array.from(pg.querySelectorAll('details.lesson button')).find(x => /Check my prediction/.test(x.textContent)).click(); });
     await page.waitForTimeout(3000);
     const r = await page.evaluate(() => { var pg = document.querySelector('#curricPages .page[data-page="py"]'); var l = pg.querySelector('details.lesson'); var a = l.querySelector('.cd-tip-line');
-      return { shown: !!(a && a.style.display === 'block'), lessonOpen: l.open, read: /✔/.test(l.querySelector('summary').textContent), moduleLine: pg.querySelector('details.module summary .s').textContent, mag: (document.querySelector('#magUnits .unitcard:nth-child(2) .muted') || {}).textContent || '' }; });
+      return { shown: !!(a && a.style.display === 'block'), lessonOpen: l.open, read: /✔/.test(l.querySelector('summary').textContent), moduleLine: pg.querySelector('details.module summary .s').textContent, termLine: pg.querySelector('details.term summary .s').textContent, yearLine: pg.querySelector('.panel.card .muted').textContent, mag: (document.querySelector('#magUnits .unitcard:nth-child(2) .muted') || {}).textContent || '' }; });
     check(r.shown && r.lessonOpen, 'the checked prediction is still in view three seconds later');
     check(r.read && /^1 of 2 read/.test(r.moduleLine) && /^1 of 24 lessons read/.test(r.mag), 'the lesson, its module and the Magister count it as read, in place (' + r.moduleLine + '; ' + r.mag + ')');
+    check(/· 1 of 8 read$/.test(r.termLine) && /24 lessons · 1 read/.test(r.yearLine), 'the term and the year count it too (' + r.termLine.slice(-14) + '; ' + r.yearLine.slice(0, 60) + ')');
     await page.evaluate(() => { FORGE.openRoom('assessments'); FORGE.tab('assessments', 'cpp'); }); await page.waitForTimeout(600);
     await page.evaluate(() => { var pg = document.querySelector('#assessPages .page[data-page="cpp"]'); pg.querySelector('details.term').open = true; pg.querySelector('details.module').open = true; pg.querySelectorAll('details.module .q .qa')[1].click(); });
     await page.waitForTimeout(3000);
     const tip = await page.evaluate(() => { var e = document.querySelector('#assessPages .page[data-page="cpp"] details.module .q .cd-tip-line'); return e ? e.textContent : ''; });
     check(/^Right\./.test(tip), 'the answer given in the questions room is still explained three seconds later');
     check(errs.length === 0, 'no page error' + (errs.length ? ': ' + errs.join(' | ') : ''));
+    await ctx.close(); }
+
+  /* 5g. accessibility: the Guidebook chapter is listed and found; the checker finds a nameless control on a closed page and an unlabelled field, keeps the scroll, speaks French; the handle's value follows the split */
+  { const { ctx, page, errs } = await open(browser, { viewport: { width: 1400, height: 700 } });
+    const g = await page.evaluate(() => { var arts = [].slice.call(document.querySelectorAll('#guide article')); var i = arts.findIndex(a => /Testing with a screen reader/.test((a.querySelector('h3') || {}).textContent || '')); var toc = document.getElementById('guideToc');
+      var s = document.getElementById('guideSearch'); s.value = 'VoiceOver'; s.dispatchEvent(new Event('input', { bubbles: true })); return new Promise(res => setTimeout(() => res({ indexed: i >= 0, inToc: /Testing with a screen reader/.test(toc.textContent), found: toc.querySelectorAll('button').length }), 400)); });
+    check(g.indexed && g.inToc && g.found >= 1, 'the Guidebook lists the screen reader chapter and finds it by "VoiceOver"');
+    const a = await page.evaluate(() => { var fold = document.getElementById('fold-a11y'); fold.open = true; var n = fold, sc = null; while (n && n !== document.body) { var cs = getComputedStyle(n); if (/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 10) { sc = n; break; } n = n.parentElement; } if (sc) sc.scrollTop = 500; var before = sc ? sc.scrollTop : 0;
+      var ff = document.getElementById('fold-file'); var pg = ff.closest('.page'); var pages = pg ? pg.parentNode.querySelectorAll('.page') : []; pages.forEach(x => x.setAttribute('data-on', x === pg ? '0' : '1')); /* the Edit page closed, as when Troubleshoot is open */
+      var b = document.createElement('button'); b.id = 'tmpNameless'; b.type = 'button'; b.innerHTML = '<span></span>'; (ff.querySelector('.fold-body') || ff).appendChild(b);
+      var s = document.createElement('select'); s.id = 'tmpSel'; s.innerHTML = '<option>One</option>'; fold.querySelector('.fold-body').appendChild(s);
+      window.__forgeA11y.run(); var found = window.__forgeA11y.last(); var after = sc ? sc.scrollTop : 0; b.remove(); s.remove(); pages.forEach(x => x.setAttribute('data-on', x === pg ? '1' : '0'));
+      return { before, after, nameless: found.filter(x => /tmpNameless/.test(x.where)).length, sel: found.filter(x => x.kind === 'label' && /tmpSel/.test(x.where)).length, editOff: pg ? pg.getAttribute('data-on') : '?' }; });
+    check(a.nameless === 1 && a.sel === 1, 'the checker finds a nameless control on a closed page and an unlabelled field (' + a.nameless + ', ' + a.sel + ')');
+    check(a.before === 500 && a.after === 500, 'the room keeps its scroll through the check (' + a.before + ' -> ' + a.after + ')');
+    const fr = await page.evaluate(() => { document.documentElement.lang = 'fr'; return new Promise(res => setTimeout(() => res({ go: document.getElementById('a11yGo').textContent, fn: document.getElementById('fnUnit').getAttribute('aria-label') }), 500)); });
+    check(fr.go === '♿ Vérifier maintenant' && /^Unité/.test(fr.fn), 'the fold and the field names speak French');
+    const hd = await page.evaluate(() => new Promise(res => { var t = document.getElementById('thread'), h = document.getElementById('handle'); t.style.setProperty('--room-w', Math.round(document.getElementById('main').clientWidth * 0.62) + 'px'); setTimeout(() => res({ now: +h.getAttribute('aria-valuenow'), min: +h.getAttribute('aria-valuemin'), max: +h.getAttribute('aria-valuemax') }), 600); }));
+    check(hd.now >= 58 && hd.now <= 66 && hd.min <= hd.now && hd.now <= hd.max, 'the handle says its new value after the split moves (' + hd.now + ' in ' + hd.min + '..' + hd.max + ')');
+    check(errs.length === 0, 'no page error' + (errs.length ? ': ' + errs.join(' | ') : ''));
+    await ctx.close(); }
+
+  /* 5h. how much help: the walkthrough's why on every step, twice over; the hidden tutor line stays hidden through boot; a store that refuses to write still keeps the level; the words follow the language */
+  { const { ctx, page, errs } = await open(browser);
+    const r = await page.evaluate(() => new Promise(async res => { const sleep = ms => new Promise(r => setTimeout(r, ms)); const whys = []; window.forgeWalkthrough(); await sleep(700); const p = document.getElementById('fg-walk');
+      for (let i = 0; i < 5; i++) { whys.push(!!p.querySelector('.fg-why')); const nx = Array.from(p.querySelectorAll('button')).find(b => (b.getAttribute('data-fgw') || '') === 'next'); if (nx) nx.click(); await sleep(500); }
+      window.forgeWalkthrough(); await sleep(700); const again = !!p.querySelector('.fg-why'); document.documentElement.lang = 'fr'; await sleep(500);
+      res({ whys, again, h3: (document.querySelector('#fgLevelCard h3') || {}).textContent, why: ((p.querySelector('.fg-why') || {}).textContent || '').slice(0, 8) }); }));
+    check(r.whys.every(Boolean) && r.again, 'the walkthrough carries its why on steps 1 to 5 and again on a second start');
+    check(r.h3 === 'Combien la Forge explique' && r.why === 'Pourquoi', 'the Settings card and the why follow the language');
+    check(errs.length === 0, 'no page error' + (errs.length ? ': ' + errs.join(' | ') : ''));
+    await ctx.close(); }
+  { const ctx = await browser.newContext({ viewport: { width: 1400, height: 800 } }); const page = await ctx.newPage(); await page.addInitScript(() => { try { localStorage.setItem('forge:tutor', '0'); } catch (e) {} });
+    await page.goto(require('./_lib').URL, { waitUntil: 'load', timeout: 180000 }); await page.waitForTimeout(3500);
+    const tut = await page.evaluate(() => document.getElementById('tutor').getAttribute('data-on'));
+    check(tut === '0', 'the tutor line she hid stays hidden through boot');
+    await ctx.close(); }
+  { const ctx = await browser.newContext({ viewport: { width: 1400, height: 800 } }); const page = await ctx.newPage(); await page.addInitScript(() => { const o = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (/^fg:/.test(k)) throw new Error('refused'); return o.call(this, k, v); }; });
+    await page.goto(require('./_lib').URL, { waitUntil: 'load', timeout: 180000 }); await page.waitForTimeout(3000);
+    const door = page.locator('#demo-entry, #cd-door').locator('text=Open the Editor').first(); if (await door.count()) await door.click(); await page.waitForTimeout(800);
+    const r = await page.evaluate(() => new Promise(async res => { const sleep = ms => new Promise(r => setTimeout(r, ms)); document.querySelector('.fg-lv[data-fg-level="ease"]').click(); await sleep(400); const card = document.querySelector('#room-editor .fg-help'); const folded = !card.open; card.querySelector('summary').click(); await sleep(200); document.body.appendChild(document.createElement('div')); await sleep(600); res({ lv: document.documentElement.getAttribute('data-fg-level'), folded, stillOpen: card.open }); }));
+    check(r.lv === 'ease' && r.folded && r.stillOpen, 'a store that refuses to write still keeps the level, and a card opened by hand stays open');
     await ctx.close(); }
 
   /* 6. with Ingenium: a second Keep keeps the first edit; a version kept under 9s61 runs one Studio on the stage */

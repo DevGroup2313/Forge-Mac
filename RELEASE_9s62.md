@@ -98,6 +98,11 @@ Chromium) and the real defects were mended; the list is in `tools/9s62/README.tx
 - **Compare two versions** of the Forge itself took fifteen seconds; now about sixty milliseconds.
 - Removing a new app by name could remove the wrong one when two shared a name; Remove now takes the row pressed.
 - The Editing panel's height follows its key, so its foot never leaves a short window.
+- The walkthrough's **why** lines were missing on steps 4 and 5 and on a second start; the context line spoke at boot
+  for a step you never opened and brought back the tutor line you had hidden. Both fixed.
+- The Guidebook chapter **Testing with a screen reader** was never listed (it was added after the Guidebook had
+  indexed its chapters). It is now under Good to know, and search finds it. The checker also finds an unlabelled
+  field and a nameless control on a closed page, and no longer scrolls you away.
 - **Check my prediction** showed the answer for a second and a half, then a repaint hid it again (and wiped an answer
   given meanwhile in the questions room). The answer now stays, and the counts follow in place.
 - Five C++ programs in year 3 lacked their `#include` lines; added, and every whole program in year 3 compiles
