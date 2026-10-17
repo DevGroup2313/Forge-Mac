@@ -102,6 +102,10 @@ suite run again). In the order of the patches:
                 rules' check stands alone), w06 (one box becomes the pill and the square), w08 (the three order numbers),
                 w10 (the button's real name; greet is one step; what the Diary records), w11 (the note is yours to
                 change; the rule is .box.on);
+                year 2: p04 (Troubleshoot names what it finds, line by line), p07 (six words, not five), p11 (without int
+                Python refuses, it does not join), w12 (JSON is pasted into Compose); year 3: c01 (today's compilers point
+                at the end of the line that lacks the semicolon; the quiz follows), c02 (integer division cuts toward zero,
+                it does not floor). Every snippet in years 2 and 3 was run or compiled by the checkers and matched its reveal.
   curriculum    five C++ programs in year 3 lacked their #include lines (c04, c08, c11); every whole program in
                 year 3 now compiles except the four whose lessons are about the compiler's refusal (c01, c08 private,
                 c09 three files, c11), and every Python snippet in year 2 runs.

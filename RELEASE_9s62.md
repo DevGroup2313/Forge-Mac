@@ -83,7 +83,9 @@ Forge itself. The scripts are in `tests/` and run with `sh tests/run.sh`.
 
 ### The review, and what it changed
 After the first build, every patch was read again adversarially (each claim traced in the built file and in
-Chromium) and the real defects were mended; the list is in `tools/9s62/README.txt`. The ones you would have met:
+Chromium) and the real defects were mended; the list is in `tools/9s62/README.txt`. Sixty-five findings were
+reported on the patches (one of them a note that found nothing wrong); the real ones were fixed in the patches, the file rebuilt from the base, and the whole suite run again on
+every rebuild. The ones you would have met:
 - A second **Keep** in the Studio used to drop the edits already in the version's code. Now they stay, and the
   new ones join them. Verified by keeping twice in Ingenium.
 - Two pasted blocks (or a block and a copy) on one part multiplied on every redraw; a part moved beside another's
@@ -107,6 +109,10 @@ Chromium) and the real defects were mended; the list is in `tools/9s62/README.tx
   given meanwhile in the questions room). The answer now stays, and the counts follow in place.
 - Five C++ programs in year 3 lacked their `#include` lines; added, and every whole program in year 3 compiles
   except the four whose lessons are about the compiler's refusal.
+- Every lesson and question of the three years was read against the Forge as it is, and every Python and C++
+  snippet run or compiled by the checkers: twenty findings, all mended (the list is in `tools/9s62/README.txt`), among
+  them one wrong bold answer (six words, not five), one wrong quiz answer (where today's compilers report a missing
+  semicolon) and one wrong word (integer division cuts toward zero, it does not floor).
 
 ## Installing
 
