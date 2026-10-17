@@ -147,6 +147,24 @@ const APPLIER_V2 = fs.readFileSync(path.join(__dirname, '..', 'tools', '9s62', '
     check(errs.length === 0, 'no page error' + (errs.length ? ': ' + errs.join(' | ') : ''));
     await ctx.close(); }
 
+  /* 5f. the curriculum: a checked prediction stays in view, the counts follow in place, and an answer in the questions room is not wiped */
+  { const { ctx, page, errs } = await open(browser);
+    await page.evaluate(() => { FORGE.openRoom('curriculum'); FORGE.tab('curriculum', 'py'); }); await page.waitForTimeout(500);
+    await page.evaluate(() => { var pg = document.querySelector('#curricPages .page[data-page="py"]'); pg.querySelector('details.term').open = true; pg.querySelector('details.module').open = true; pg.querySelector('details.lesson').open = true;
+      Array.from(pg.querySelectorAll('details.lesson button')).find(x => /Check my prediction/.test(x.textContent)).click(); });
+    await page.waitForTimeout(3000);
+    const r = await page.evaluate(() => { var pg = document.querySelector('#curricPages .page[data-page="py"]'); var l = pg.querySelector('details.lesson'); var a = l.querySelector('.cd-tip-line');
+      return { shown: !!(a && a.style.display === 'block'), lessonOpen: l.open, read: /✔/.test(l.querySelector('summary').textContent), moduleLine: pg.querySelector('details.module summary .s').textContent, mag: (document.querySelector('#magUnits .unitcard:nth-child(2) .muted') || {}).textContent || '' }; });
+    check(r.shown && r.lessonOpen, 'the checked prediction is still in view three seconds later');
+    check(r.read && /^1 of 2 read/.test(r.moduleLine) && /^1 of 24 lessons read/.test(r.mag), 'the lesson, its module and the Magister count it as read, in place (' + r.moduleLine + '; ' + r.mag + ')');
+    await page.evaluate(() => { FORGE.openRoom('assessments'); FORGE.tab('assessments', 'cpp'); }); await page.waitForTimeout(600);
+    await page.evaluate(() => { var pg = document.querySelector('#assessPages .page[data-page="cpp"]'); pg.querySelector('details.term').open = true; pg.querySelector('details.module').open = true; pg.querySelectorAll('details.module .q .qa')[1].click(); });
+    await page.waitForTimeout(3000);
+    const tip = await page.evaluate(() => { var e = document.querySelector('#assessPages .page[data-page="cpp"] details.module .q .cd-tip-line'); return e ? e.textContent : ''; });
+    check(/^Right\./.test(tip), 'the answer given in the questions room is still explained three seconds later');
+    check(errs.length === 0, 'no page error' + (errs.length ? ': ' + errs.join(' | ') : ''));
+    await ctx.close(); }
+
   /* 6. with Ingenium: a second Keep keeps the first edit; a version kept under 9s61 runs one Studio on the stage */
   const ING = process.env.INGENIUM_HTML;
   if (ING && fs.existsSync(ING)) {

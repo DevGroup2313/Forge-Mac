@@ -55517,9 +55517,9 @@ function lessonNode(u,m,l,i){
   ld.innerHTML='<summary><span class="n">'+(i+1)+'</span><span class="t">'+(done?'\u2714 ':'')+l.t+'</span><span class="s">'+(done?'read':(u.runs?'try it on the right':'read, predict, check'))+'</span></summary>';
   var lb=document.createElement('div'); lb.className='fold-body'; lb.innerHTML=l.body;
   var row=mk('div','row');
-  if(u.runs&&l.try_){ var tb=mk('button','stone solid','\u25b6\ufe0f Try it on the right'); tb.onclick=function(){ el('entry').value=l.try_; el('fromSel').value='html'; el('toSel').value='html'; el('fname').value='lesson-'+m.id+'-'+(i+1)+'.html'; el('renderBtn').click(); openRoom('curriculum'); MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); magPaint(u.id, m.id, i); teach('lessonTry',{t:l.t}); }; row.appendChild(tb); }
-  if(l.reveal){ var rv=mk('button','stone solid','Check my prediction'); var ans=mk('div','cd-tip-line'); ans.style.display='none'; ans.innerHTML=l.reveal; rv.onclick=function(){ ans.style.display='block'; rv.disabled=true; MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); setTimeout(function(){ magPaint(u.id, m.id, i); },1500); }; row.appendChild(rv); lb.appendChild(row); lb.appendChild(ans); }
-  else { var rd=mk('button','solid','Mark as read'); rd.onclick=function(){ MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); magPaint(u.id, m.id, i); }; row.appendChild(rd); lb.appendChild(row); }
+  if(u.runs&&l.try_){ var tb=mk('button','stone solid','\u25b6\ufe0f Try it on the right'); tb.onclick=function(){ el('entry').value=l.try_; el('fromSel').value='html'; el('toSel').value='html'; el('fname').value='lesson-'+m.id+'-'+(i+1)+'.html'; el('renderBtn').click(); openRoom('curriculum'); MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); magMark(ld,u,m,l,i); teach('lessonTry',{t:l.t}); }; row.appendChild(tb); }
+  if(l.reveal){ var rv=mk('button','stone solid',done?'\u2714 Checked':'Check my prediction'); var ans=mk('div','cd-tip-line'); ans.style.display=done?'block':'none'; ans.innerHTML=l.reveal; rv.disabled=done; rv.onclick=function(){ ans.style.display='block'; rv.disabled=true; rv.textContent='\u2714 Checked'; MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); magMark(ld,u,m,l,i); }; row.appendChild(rv); lb.appendChild(row); lb.appendChild(ans); }   /* 9s62: the answer stays in view (measured: a repaint 1.5 s later hid it) */
+  else { var rd=mk('button','solid',done?'\u2714 Read':'Mark as read'); rd.disabled=done; rd.onclick=function(){ MAG.done[u.id+':'+m.id+':'+i]=1; magSave(); rd.disabled=true; rd.textContent='\u2714 Read'; magMark(ld,u,m,l,i); }; row.appendChild(rd); lb.appendChild(row); }
   ld.appendChild(lb); return ld;
 }
 function moduleNode(u,x){
@@ -55555,16 +55555,26 @@ function quizPage(u){
     td.appendChild(tb); pg.appendChild(td); });
   return pg;
 }
-function magPaint(unitId, moduleId, openLesson){
-  var C=el('curricPages'), A=el('assessPages'), U=el('magUnits');
-  if(C!==__ghost){ C.innerHTML=''; CURRICULUM.forEach(function(u){ C.appendChild(lessonsPage(u)); }); }
-  if(A!==__ghost){ A.innerHTML=''; CURRICULUM.forEach(function(u){ A.appendChild(quizPage(u)); }); }
+/* 9s62: a lesson marked read, or its prediction checked, is brought up to date in place: its own line, its module's count, the
+   Magister's counts. Measured on 9s61: a repaint of the three rooms 1.5 s after "Check my prediction" hid the answer she was
+   reading and enabled the button again, so the answer came and went; and an answer given meanwhile in the questions room was
+   lost with it. */
+function magPaintUnits(){ var U=el('magUnits');
   if(U!==__ghost){ U.innerHTML=''; CURRICULUM.forEach(function(u){
     var c=yearCounts(u);
     var r=mk('div','panel card unitcard'); r.innerHTML='<div class="magrow"><span class="unit-g">'+u.emoji+'</span><div style="flex:1"><b>Year '+u.year+' \u00b7 '+u.name+'</b><div class="muted">'+c.read+' of '+c.lessons+' lessons read \u00b7 '+c.asked+' of '+c.modules+' modules with their questions answered</div></div></div>';
     var row=mk('div','row'); var a=mk('button','stone solid','\ud83d\udcda Open the lessons'); a.onclick=function(){ openRoom('curriculum'); pageTabs('curriculum',u.id); teach('magister',{name:u.name}); };
     var b=mk('button','solid','\u270f\ufe0f Open the questions'); b.onclick=function(){ openRoom('assessments'); pageTabs('assessments',u.id); };
     row.appendChild(a); row.appendChild(b); r.appendChild(row); U.appendChild(r); }); }
+}
+function magMark(ld,u,m,l,i){ try{ var st=ld.querySelector('summary .t'), ss=ld.querySelector('summary .s'); if(st) st.textContent='\u2714 '+l.t; if(ss) ss.textContent='read';
+    var md=el('module-'+m.id); if(md!==__ghost){ var n=readCount(u,m), ms=md.querySelector('summary .s'); if(ms){ ms.textContent=n+' of '+m.lessons.length+' read'+(MAG.asked[m.id]?' \u00b7 questions answered':''); ms.className='s'+(n===m.lessons.length?' ok':''); } }
+    magPaintUnits(); if(typeof ascensusPaint==='function') ascensusPaint(); }catch(e){} }
+function magPaint(unitId, moduleId, openLesson){
+  var C=el('curricPages'), A=el('assessPages'), U=el('magUnits');
+  if(C!==__ghost){ C.innerHTML=''; CURRICULUM.forEach(function(u){ C.appendChild(lessonsPage(u)); }); }
+  if(A!==__ghost){ A.innerHTML=''; CURRICULUM.forEach(function(u){ A.appendChild(quizPage(u)); }); }
+  magPaintUnits();
   pageTabs('curriculum', unitId); pageTabs('assessments');
   if(unitId && moduleId){ var md=el('module-'+moduleId); if(md!==__ghost){ md.open=true; var t=md.closest('details.term'); if(t) t.open=true; } if(openLesson!==undefined){ var d=el('lesson-'+unitId+'-'+moduleId+'-'+openLesson); if(d!==__ghost) d.open=true; } }
   if(typeof ascensusPaint==='function') ascensusPaint();

@@ -98,6 +98,8 @@ Chromium) and the real defects were mended; the list is in `tools/9s62/README.tx
 - **Compare two versions** of the Forge itself took fifteen seconds; now about sixty milliseconds.
 - Removing a new app by name could remove the wrong one when two shared a name; Remove now takes the row pressed.
 - The Editing panel's height follows its key, so its foot never leaves a short window.
+- **Check my prediction** showed the answer for a second and a half, then a repaint hid it again (and wiped an answer
+  given meanwhile in the questions room). The answer now stays, and the counts follow in place.
 - Five C++ programs in year 3 lacked their `#include` lines; added, and every whole program in year 3 compiles
   except the four whose lessons are about the compiler's refusal.
 

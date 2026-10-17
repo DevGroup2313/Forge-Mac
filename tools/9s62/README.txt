@@ -76,6 +76,9 @@ suite run again). In the order of the patches:
                 was cut at 200 000 characters, is said; the hand's neighbour for a move skips the part's own run.
   p_selftest    the real error name is read from the request; the megabyte pattern is not all zeros at the sampled
                 points; the fold speaks French; 'copied' is said only when the clipboard took it.
+  p_curriculum  "Check my prediction" used to repaint the three rooms 1.5 s later, which hid the answer she was reading and
+                enabled the button again (and wiped an answer given meanwhile in the questions room): a lesson marked read, or
+                its prediction checked, is now brought up to date in place; a lesson already read shows its answer.
   curriculum    five C++ programs in year 3 lacked their #include lines (c04, c08, c11); every whole program in
                 year 3 now compiles except the four whose lessons are about the compiler's refusal (c01, c08 private,
                 c09 three files, c11), and every Python snippet in year 2 runs.
