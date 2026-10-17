@@ -4,7 +4,8 @@ cd "$(dirname "$0")/.." || exit 1
 . tests/env.sh
 mkdir -p tests/out tests/www
 cp "$FORGE_HTML" tests/www/the_forge.html
-( cd tests/www && npx --yes http-server -p "$FORGE_PORT" -s >/dev/null 2>&1 & echo $! > ../out/server.pid )
+ROOT=$(pwd)
+( cd tests/www && npx --yes http-server -p "$FORGE_PORT" -s >/dev/null 2>&1 & echo $! > "$ROOT/tests/out/server.pid" )
 sleep 2
 fails=0
 for t in boot studio library storage_backup compare a11y; do
