@@ -1,0 +1,45 @@
+THE FORGE  |  Copyright (c) 2026 Yannie D. Forest. All rights reserved.
+NO LICENCE IS GRANTED. See LICENCE.txt.
+--------------------------------------------------------------------------
+
+WHEN macOS WILL NOT OPEN SOMETHING FROM THIS PACKAGE
+==================================================
+
+If macOS says that it "could not verify" The Forge.app or
+"Build Mac App.command" "is free of malware", nothing is wrong with the
+file. This is Gatekeeper. It has no proof from Apple that the file was
+checked, because checking (notarisation) needs a paid Apple Developer
+account, so it refuses to open it. Any file from the internet that has
+not been notarised is treated this way.
+
+FOR The Forge.app (the app built by GitHub)
+  Way 1, Terminal (most reliable). Open Terminal (Command+Space, type
+  Terminal, Return), paste this line, press Return:
+
+      xattr -dr com.apple.quarantine "/Applications/The Forge.app"
+
+  Way 2, System Settings. Double-click the app and let macOS refuse it.
+  Open System Settings, Privacy & Security, scroll down to the message
+  about the app, click "Open Anyway", and confirm with your password.
+
+FOR "Build Mac App.command" (building on this Mac)
+  Way 1, Terminal. Open Terminal, type   cd   and a space, drag the
+  "Mac project" folder onto the Terminal window, press Return, then type:
+
+      bash "Build Mac App.command"
+
+  and press Return. The build runs in the Terminal window.
+
+  Way 2, remove the download mark from the folder. In Terminal type
+      xattr -dr com.apple.quarantine
+  and a space, drag the "Mac project" folder onto the window, and press
+  Return. Then double-click "Build Mac App.command" as normal.
+
+  Way 3, System Settings, exactly as for the app above.
+
+On macOS Sequoia (version 15) and later, right-click then Open no longer
+opens a blocked file. That is an Apple change. The ways above still work.
+
+AND IF YOU WOULD RATHER NOT DO ANY OF THIS
+  Double-click the_forge.html in "Mac project". That one file is the whole
+  of The Forge; it opens in Safari and runs offline.
