@@ -7,14 +7,14 @@ See LICENCE.txt. Every distributed copy carries a build marker.
 THE FORGE ON A MAC
 ==================
 
-Build 635 (9s67), 2026-10-18. Made by The Forge, 18 October 2026.
+Build 636 (9s68), 2026-10-18. Made by The Forge, 18 October 2026.
 
-New in 635. Its own Tabula now holds a thesis of 100,000 words, by
-Inkwell 7.44's recipe. A keystroke is answered at once, because the
-pages are laid out only as far as an edit moves them. A long document is
-kept in the browser's larger store (IndexedDB), so it is not lost when it
-outgrows the small one. It carries Inkwell 7.44, Ingenium 5.3 and Carpe
-Diem 1054, and a copy of itself.
+New in 636. It carries Inkwell 7.45, Carpe Diem 1055 (whose Tabula holds a
+thesis of 100,000 words and whose mini Forge edits Carpe Diem alone) and
+Ingenium 5.4, and a copy of itself. The Mac app in every kit the Forge
+makes now builds on GitHub: its first start as Intel, under Rosetta, may
+take up to 40 seconds before the build counts it as failed (it was 12).
+Its own Tabula has held a thesis of 100,000 words since 635.
 
 This repository builds the app by itself: the workflow in .github finds
 this folder, builds The Forge.app for Intel and Apple silicon Macs, opens
