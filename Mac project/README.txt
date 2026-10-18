@@ -7,12 +7,18 @@ See LICENCE.txt. Every distributed copy carries a build marker.
 THE FORGE ON A MAC
 ==================
 
-Build 636 (9s68), 2026-10-18. Made by The Forge, 18 October 2026.
+Build 637 (9s69), 2026-10-18. Made by The Forge, 18 October 2026.
 
-New in 636. It carries Inkwell 7.45, Carpe Diem 1055 (whose Tabula holds a
+New in 637. The help level keys ("First day", "Finding my way",
+"At ease") are raised and move like every other key in the Forge: they
+lift under the pointer, sink when pressed, and the chosen level is the
+filled key, which settles into place. They follow day, night and the
+Forge's Minimal motion setting.
+
+Since 636 it carries Inkwell 7.45, Carpe Diem 1055 (whose Tabula holds a
 thesis of 100,000 words and whose mini Forge edits Carpe Diem alone) and
 Ingenium 5.4, and a copy of itself. The Mac app in every kit the Forge
-makes now builds on GitHub: its first start as Intel, under Rosetta, may
+makes builds on GitHub: its first start as Intel, under Rosetta, may
 take up to 40 seconds before the build counts it as failed (it was 12).
 Its own Tabula has held a thesis of 100,000 words since 635.
 
