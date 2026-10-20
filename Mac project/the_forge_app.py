@@ -948,6 +948,124 @@ def _seal_shortcuts(bundle, img):
             pass
 
 
+# ---- PASS 643 (20 October 2026): Refresh from the Mac's own menu and keys ----------------------------------------
+# The owner's words: "I want a refresh button added to Ingenium and the Forge, that refreshed the app if it glitches
+# or freezes." The page has its own Refresh key, which saves first, but a frozen page cannot answer a key of its own.
+# So the app menu holds "Refresh The Forge", and Command+R reaches the app before the page: the page is asked to
+# refresh itself (saving first); when it gives no answer within two seconds, the window loads the page again by itself.
+_REFRESH = {"monitor": None, "url": None, "lock": None}
+
+
+def _refresh_window(window):
+    """Runs on its own thread (a menu action or the key monitor starts it)."""
+    import threading
+    if _REFRESH["lock"] is None:
+        _REFRESH["lock"] = threading.Lock()
+    if not _REFRESH["lock"].acquire(False):
+        return
+    try:
+        answer = {}
+
+        def _ask():
+            try:
+                answer["v"] = window.evaluate_js(
+                    "(function(){try{var f=window.forgeRefresh||window.ingRefresh;if(typeof f==='function'){f('menu');return 'page';}}"
+                    "catch(e){}return 'none';})()")
+            except BaseException:
+                answer["v"] = "!" + repr(sys.exc_info()[1])
+
+        t = threading.Thread(target=_ask, daemon=True)
+        t.start()
+        t.join(2.0)
+        if answer.get("v") == "page":
+            log_problem("refresh: the page refreshes itself")
+            return
+        log_problem("refresh: no answer from the page (%r); the window loads it again" % (answer.get("v"),))
+        try:
+            url = window.get_current_url()
+        except BaseException:
+            url = None
+        url = url or _REFRESH["url"]
+        if url:
+            window.load_url(url)
+    except BaseException:
+        log_problem("refresh failed", sys.exc_info())
+    finally:
+        _REFRESH["lock"].release()
+
+
+def _refresh_menu(webview, window):
+    """The app menu's "Refresh The Forge", or None where this pywebview cannot add to the app menu (6.2 and later can)."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        import re
+        ver = tuple(int(x) for x in re.findall(r"\d+", str(getattr(webview, "__version__", "0")))[:2])
+        if ver < (6, 2):
+            return None
+        from webview.menu import Menu, MenuAction
+
+        def refresh_the_forge():
+            _refresh_window(window)
+
+        return [Menu("__app__", [MenuAction("Refresh The Forge", refresh_the_forge)])]
+    except Exception:
+        log_problem("refresh menu: not available", sys.exc_info())
+        return None
+
+
+def _install_refresh_key_monitor(window):
+    """macOS only: Command+R (with Shift too) in the main window refreshes, even while the page is frozen."""
+    if _REFRESH["monitor"] is not None or sys.platform != "darwin":
+        return
+    try:
+        import threading
+        import AppKit
+        mask = getattr(AppKit, "NSEventMaskKeyDown", getattr(AppKit, "NSKeyDownMask", 1 << 10))
+        flag_cmd = getattr(AppKit, "NSEventModifierFlagCommand", getattr(AppKit, "NSCommandKeyMask", 1 << 20))
+        flag_alt = getattr(AppKit, "NSEventModifierFlagOption", getattr(AppKit, "NSAlternateKeyMask", 1 << 19))
+        flag_ctrl = getattr(AppKit, "NSEventModifierFlagControl", getattr(AppKit, "NSControlKeyMask", 1 << 18))
+
+        def _handler(ev):
+            try:
+                f = ev.modifierFlags()
+                if not (f & flag_cmd) or (f & flag_alt) or (f & flag_ctrl):
+                    return ev
+                if str(ev.charactersIgnoringModifiers() or "").lower() != "r":
+                    return ev
+                win = ev.window()
+                if win is None or str(win.title() or "") != WINDOW_TITLE:
+                    return ev
+                threading.Thread(target=_refresh_window, args=(window,), daemon=True).start()
+                return None  # the app has it; the page does not see it as well
+            except BaseException:
+                return ev
+
+        _REFRESH["monitor"] = AppKit.NSEvent.addLocalMonitorForEventsMatchingMask_handler_(mask, _handler)
+        log_problem("refresh key monitor installed" if _REFRESH["monitor"] is not None else "refresh key monitor: AppKit refused it")
+    except Exception:
+        log_problem("refresh key monitor failed", sys.exc_info())
+
+
+def _start_refresh_keys(window):
+    """The key monitor installs on the main thread once the window has settled (PyObjCTools' AppHelper, which
+    pywebview itself carries)."""
+    if sys.platform != "darwin":
+        return
+    import threading
+    import time
+
+    def _boot():
+        time.sleep(1.2)
+        try:
+            from PyObjCTools import AppHelper
+            AppHelper.callAfter(_install_refresh_key_monitor, window)
+        except Exception:
+            _install_refresh_key_monitor(window)
+
+    threading.Thread(target=_boot, daemon=True).start()
+
+
 def main():
     skip_server_name_lookup()
     app_html = find_app_html()
@@ -1096,8 +1214,18 @@ def main():
     show_seal_in_dock('the_forge.png')
     give_bundle_its_seal()
     _store = storage_dir()
+    _REFRESH["url"] = app_url
+    _menu = _refresh_menu(webview, window)  # PASS 643: "Refresh The Forge" in the app menu, and Command+R
+    _start_refresh_keys(window)
     try:
-        if _store:
+        if _store and _menu:
+            try:
+                webview.start(gui=None, debug=False, private_mode=False, storage_path=_store, menu=_menu)
+            except TypeError:
+                log_problem("webview.start refused the menu; starting without it")
+                webview.start(gui=None, debug=False, private_mode=False, storage_path=_store)
+            _end_session()
+        elif _store:
             webview.start(gui=None, debug=False, private_mode=False, storage_path=_store)
             _end_session()
         else:
