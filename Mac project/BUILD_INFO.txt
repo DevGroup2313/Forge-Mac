@@ -4,3 +4,10 @@ Pass: 644
 Stamp: 9s76
 Copyright (c) 2026 Yannie D. Forest. All rights reserved.
 NO LICENCE IS GRANTED.
+
+Fingerprints (SHA-256). A copy whose fingerprint differs is not the owner's release (LICENCE.txt):
+  7e4780b34f28d5161f3657cb961f3e2db6777ec1eb591cf68fe414bf7c1c564d  the_forge.html (13591634 bytes)
+  3d925e76ed08bec19a9d7843a6c015bf7d8b8a74097c3ad4e146b90dd89dbcfd  the_forge_parts/forge-bi-cd.txt (12908700 bytes)
+  3e3b42a7f8c13dd9c717ff2299f147f37a24e68b2a2579268df30a26b217dd5b  the_forge_parts/forge-bi-ingenium.txt (28897568 bytes)
+  c9517dd07313888020e4592f19be6d707fd27915820be5b919fce79b05fb5f5e  the_forge_parts/forge-bi-inkwell.txt (1880652 bytes)
+  355fcec7e9d8b13c3c9382f54a1b341b1efd9f224268059595f85949fa52cc57  the_forge_parts/forge-bi-self.txt (6469096 bytes)
