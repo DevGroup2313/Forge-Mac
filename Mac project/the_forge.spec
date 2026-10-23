@@ -56,7 +56,8 @@ a = Analysis(
     pathex=[],
     binaries=extra_binaries,
     # the app itself travels inside the bundle
-    datas=extra_datas + [('the_forge.html', '.'), ('the_forge.icns', '.'), ('the_forge.png', '.')],
+    # 644: the apps the Forge carries, in files beside the page (the Mac app opens the quick page)
+    datas=extra_datas + ([('the_forge_parts', 'the_forge_parts')] if os.path.isdir('the_forge_parts') else []) + [('the_forge.html', '.'), ('the_forge.icns', '.'), ('the_forge.png', '.')],
     # Named outright because PyInstaller cannot see them: pywebview chooses its
     # backend while running, so nothing in the source imports these by name.
     # Left out, the app builds cleanly and then cannot draw a window. Any that
