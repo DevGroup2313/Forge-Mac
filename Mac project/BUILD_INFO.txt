@@ -6,8 +6,8 @@ Copyright (c) 2026 Yannie D. Forest. All rights reserved.
 NO LICENCE IS GRANTED.
 
 Fingerprints (SHA-256). A copy whose fingerprint differs is not the owner's release (LICENCE.txt):
-  50cfc21f1039784d73080765e5ada4f8940c3102c7818e0c96d5797e3bbe982e  the_forge.html (13978888 bytes)
+  4d5d764eb42702a3cfeeb34e814eddddad8fb0ea8d9b4f1225bf9d1de874f1a4  the_forge.html (13978888 bytes)
   3d925e76ed08bec19a9d7843a6c015bf7d8b8a74097c3ad4e146b90dd89dbcfd  the_forge_parts/forge-bi-cd.txt (12908700 bytes)
-  55b4d3ba577ea6bde21fdeb1bbd33259a5fe9b05d73f6d7e7aaba561e0d390a1  the_forge_parts/forge-bi-ingenium.txt (19231192 bytes)
+  8591f46ad80d5223763b47dcc4ec3913863572c0b858ebbb2dfd099a451cdc0c  the_forge_parts/forge-bi-ingenium.txt (19231608 bytes)
   0160b7ca72860b9aa598069cebe541435c0639b52c31de7c471ee7846d7482c5  the_forge_parts/forge-bi-inkwell.txt (1937928 bytes)
   e52ae18b8454e3ed1332bffaed3f1ad885a402b85b0de25e3a9262232eaf2c36  the_forge_parts/forge-bi-self.txt (6574228 bytes)
