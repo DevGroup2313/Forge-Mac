@@ -107,6 +107,10 @@ jobs:
               if [ "$CODE" = "200" ]; then break; fi
             done
             echo "$MODE: the app's page server answered $CODE after $T seconds"
+            # 647: the page must go out marked not to be kept, or the web view can show a page kept from an earlier build
+            HDR=$(curl -s -D - -o /dev/null --max-time 5 http://127.0.0.1:42001/the_forge.html | tr -d '\r' | grep -i '^cache-control:' || true)
+            echo "$MODE: the page's caching header: ${HDR:-none}"
+            case "$HDR" in *no-store*) ;; *) echo "$MODE: the page is not marked no-store, so a new build could show an old page"; exit 1;; esac
             screencapture -x "$RUNNER_TEMP/shots/mac-$MODE-first.png" 2>/dev/null || echo "no screenshot"
             if [ $T -lt 40 ]; then sleep $((40-T)); fi
             screencapture -x "$RUNNER_TEMP/shots/mac-$MODE-40s.png" 2>/dev/null || echo "no screenshot"
@@ -115,7 +119,10 @@ jobs:
             echo "--- what the app recorded ($MODE) ---"
             cat "$LOG" 2>/dev/null || cat "$HOME/the_forge_crash.log" 2>/dev/null || echo "(nothing)"
             if grep -q "Traceback" "$LOG" "$HOME/the_forge_crash.log" 2>/dev/null; then echo "$MODE: a fault was recorded"; exit 1; fi
+            echo "$MODE: $(grep -h 'page: build' "$LOG" "$HOME/the_forge_crash.log" 2>/dev/null | tail -1 || true)"
           done
+          # 647: the first start of this build emptied the web view's cache of pages (the build is noted for the next start)
+          cat "$HOME/Library/Application Support/TheForge/page_build.txt" 2>/dev/null && echo " (the build noted)" || { echo "the build was not noted: the page cache was not emptied"; exit 1; }
           rm -f "$LOG"
 
       - name: Quit the app three times as a person does, then open it again
