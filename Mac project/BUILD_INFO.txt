@@ -1,13 +1,13 @@
 The Forge
-Build: 2026-10-21
-Pass: 646
-Stamp: 9s78
+Build: 2026-10-25
+Pass: 647
+Stamp: 9s79
 Copyright (c) 2026 Yannie D. Forest. All rights reserved.
 NO LICENCE IS GRANTED.
 
 Fingerprints (SHA-256). A copy whose fingerprint differs is not the owner's release (LICENCE.txt):
-  c2be9ddb05242665fa3b083ec09977743f2d71f7cf98f6957df05fc0092fa472  the_forge.html (14002819 bytes)
-  3d925e76ed08bec19a9d7843a6c015bf7d8b8a74097c3ad4e146b90dd89dbcfd  the_forge_parts/forge-bi-cd.txt (12908700 bytes)
-  adbb19d8ecbd9b3a8b80af6647a30ca0d7294e4176f2ec287fa5e6248057b309  the_forge_parts/forge-bi-ingenium.txt (19246448 bytes)
-  0160b7ca72860b9aa598069cebe541435c0639b52c31de7c471ee7846d7482c5  the_forge_parts/forge-bi-inkwell.txt (1937928 bytes)
-  62879c099f45ebe86ed8b9e18c746a8ea126270374ef0684a02c321d9beac004  the_forge_parts/forge-bi-self.txt (6585572 bytes)
+  fab5d16a290a08e57c2d585bef890067390e41ecd3f6939438942842b71873d2  the_forge.html (14204149 bytes)
+  1b8a0d59acde6dc22c2cad7a3336f990b55829f5fd978d091e86aaaba209aa0e  the_forge_parts/forge-bi-cd.txt (25695496 bytes)
+  bb0bae63ce6f5545c337484a6f26cb7263c6c0b589ff20ea0d6c829383155c41  the_forge_parts/forge-bi-ingenium.txt (19949352 bytes)
+  0ffaaabfac210d78288db0c06f23703cf22ec300eabdf04e4cc2277034015ee2  the_forge_parts/forge-bi-inkwell.txt (1961828 bytes)
+  a9cc95da2766ce39264147b3d2f2b466119663b94c4140d16d05fcf57e9c0e4c  the_forge_parts/forge-bi-self.txt (6689268 bytes)
